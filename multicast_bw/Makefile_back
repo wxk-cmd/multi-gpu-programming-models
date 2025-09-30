@@ -1,0 +1,40 @@
+# Copyright (c) 2017-2018, NVIDIA CORPORATION. All rights reserved.
+NP ?= 1
+
+NVCC=/usr/local/cuda/bin/nvcc
+HPCX_HOME ?= /opt/hpcx
+
+# 用 HPC-X 的 Open MPI 包装器
+MPICXX ?= /usr/mpi/gcc/openmpi-4.1.7a1/bin/mpicxx
+MPIRUN ?= /usr/mpi/gcc/openmpi-4.1.7a1/bin/mpirun
+CUDA_HOME ?= /usr/local/cuda
+
+GENCODE_SM90    := -gencode arch=compute_90,code=sm_90 -gencode arch=compute_90,code=compute_90
+GENCODE_FLAGS	:= $(GENCODE_SM90)
+ifdef DISABLE_CUB
+        NVCC_FLAGS = -Xptxas --optimize-float-atomics
+else
+        NVCC_FLAGS = -DHAVE_CUB
+endif
+ifdef SKIP_CUDA_AWARENESS_CHECK
+        MPICXX_FLAGS = -DSKIP_CUDA_AWARENESS_CHECK
+endif
+NVCC_FLAGS += -lineinfo $(GENCODE_FLAGS) -std=c++17
+MPICXX_FLAGS += -DUSE_NVTX -I$(CUDA_HOME)/include -std=c++17
+LD_FLAGS = -L$(CUDA_HOME)/lib64 -lcudart -lcuda -ldl -lm
+jacobi: Makefile jacobi.cpp jacobi_kernels.o
+	$(MPICXX) $(MPICXX_FLAGS) jacobi.cpp jacobi_kernels.o $(LD_FLAGS) -o jacobi
+
+jacobi_kernels.o: Makefile jacobi_kernels.cu
+	$(NVCC) $(NVCC_FLAGS) jacobi_kernels.cu -c
+.PHONY.: clean
+clean:
+	rm -f jacobi jacobi_kernels.o *.nsys-rep jacobi.*.compute-sanitizer.log
+
+sanitize: jacobi
+	$(MPIRUN) -np $(NP) compute-sanitizer --log-file jacobi.%q{OMPI_COMM_WORLD_RANK}.compute-sanitizer.log ./jacobi -niter 10
+
+run: jacobi
+	$(MPIRUN) --allow-run-as-root -np $(NP) --mca pml ob1 --mca btl self,vader,tcp --mca coll ^hcoll --mca pml_ucx_enable 0 ./jacobi
+profile: jacobi
+	$(MPIRUN) -np $(NP) nsys profile --trace=mpi,cuda,nvtx -o jacobi.%q{OMPI_COMM_WORLD_RANK} ./jacobi -niter 10

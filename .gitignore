@@ -1,0 +1,4 @@
+*.o
+jacobi
+test-*.log
+.vscode
