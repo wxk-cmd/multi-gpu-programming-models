@@ -12,7 +12,12 @@ This project implements the well known multi GPU Jacobi solver with different mu
 * `nccl_overlap`                Multi Process with MPI and NCCL using NCCL for inter GPU communication with overlapping communication
 * `nccl_graphs`                 Multi Process with MPI and NCCL using NCCL for inter GPU communication with overlapping communication combined with CUDA Graphs
 * `nvshmem`                     Multi Process with MPI and NVSHMEM using NVSHMEM for inter GPU communication.
-* `multi_node_p2p`              Multi Process Multi Node variant using the low level CUDA Driver [Virtual Memory Management](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#virtual-memory-management) and [Multicast Object Management](https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__MULTICAST.html#group__CUDA__MULTICAST) APIs. This example is for developers of libraries like NCCL or NVSHMEM. It shows how higher-level programming models like NVSHMEM work internally within a (multinode) NVLINK domain. Application developers generally should use the higher-level MPI, NCCL, or NVSHMEM interfaces instead of this API.
+* `multi_node_p2p`              Multi Process Multi Node variant using the low level CUDA Driver
+* `multicast_bw`                Multi Process Multi gpu variant using the low level CUDA Driver and test multicast bandwidth
+
+
+
+ [Virtual Memory Management](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#virtual-memory-management) and [Multicast Object Management](https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__MULTICAST.html#group__CUDA__MULTICAST) APIs. This example is for developers of libraries like NCCL or NVSHMEM. It shows how higher-level programming models like NVSHMEM work internally within a (multinode) NVLINK domain. Application developers generally should use the higher-level MPI, NCCL, or NVSHMEM interfaces instead of this API.
 
 Each variant is a stand alone `Makefile` project and most variants have been discussed in various GTC Talks, e.g.:
 * `single_threaded_copy`, `multi_threaded_copy`, `multi_threaded_copy_overlap`, `multi_threaded_p2p`, `multi_threaded_p2p_opt`, `mpi`, `mpi_overlap` and `nvshmem` on DGX-1V at GTC Europe 2017 in 23031 - Multi GPU Programming Models
